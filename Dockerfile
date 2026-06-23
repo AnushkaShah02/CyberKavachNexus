@@ -33,4 +33,9 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
 # Install Composer dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+# Force Apache to use only one MPM
+RUN a2dismod mpm_event || true
+RUN a2dismod mpm_worker || true
+RUN a2enmod mpm_prefork
+
 EXPOSE 80
