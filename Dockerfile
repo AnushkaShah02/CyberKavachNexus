@@ -30,10 +30,10 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
 
-# Install Composer dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Force Apache to use only one MPM
-
+RUN echo "=== APACHE MODULES ==="
+RUN ls -la /etc/apache2/mods-enabled/
+RUN grep -R "mpm_" /etc/apache2 || true
 
 EXPOSE 80
