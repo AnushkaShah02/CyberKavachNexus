@@ -1,0 +1,22 @@
+{
+    "name": "cyberkavach/nexus",
+    "description": "Smart Club Management System for CyberKavach Club",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "vlucas/phpdotenv": "^5.5",
+        "phpmailer/phpmailer": "^6.8",
+        "endroid/qr-code": "^6.0",
+        "dompdf/dompdf": "^3.1",
+        "setasign/fpdf": "^1.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "CyberKavach\\Nexus\\": "src/",
+            "CyberKavach\\Nexus\\Config\\": "config/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
