@@ -40,19 +40,19 @@ function getMenuClass(string $targetPage, string $activePage): string {
     
     <ul class="sidebar-menu">
         <li class="<?= getMenuClass('dashboard', $activePage) ?>">
-            <a href="<?= SecurityHelper::escape(SecurityHelper::asset('views/pages/dashboard.php')) ?>">
+            <a href="/views/pages/dashboard.php">
                 <i data-lucide="layout-dashboard"></i>
                 <span>Dashboard</span>
             </a>
         </li>
         <li class="<?= getMenuClass('events', $activePage) ?>">
-            <a href="<?= SecurityHelper::asset('views/pages/events.php') ?>">
+            <a href="/views/pages/events.php">
                 <i data-lucide="calendar"></i>
                 <span>Events</span>
             </a>
         </li>
         <li class="<?= getMenuClass('workspace', $activePage) ?>">
-            <a href="<?= SecurityHelper::asset('views/pages/workspace.php') ?>">
+            <a href="/views/pages/workspace.php">
                 <i data-lucide="folder-kanban"></i>
                 <span>Workspaces</span>
             </a>
@@ -78,7 +78,7 @@ function getMenuClass(string $targetPage, string $activePage): string {
 ): ?>
 
 <li class="<?= getMenuClass('participants', $activePage) ?>">
-    <a href="<?= SecurityHelper::asset('views/pages/participants.php') ?>">
+    <a href="/views/pages/participants.php">
         <i data-lucide="user-check"></i>
         <span>Participants</span>
     </a>
@@ -95,7 +95,7 @@ function getMenuClass(string $targetPage, string $activePage): string {
 ): ?>
 
 <li class="<?= getMenuClass('event_attendance', $activePage) ?>">
-    <a href="<?= SecurityHelper::asset('views/pages/event_attendance.php') ?>">
+    <a href="/views/pages/event_attendance.php">
         <i data-lucide="clipboard-check"></i>
         <span>Event Attendance</span>
     </a>
@@ -112,7 +112,7 @@ function getMenuClass(string $targetPage, string $activePage): string {
 ): ?>
 
 <li class="<?= getMenuClass('certificates', $activePage) ?>">
-    <a href="<?= SecurityHelper::asset('views/pages/certificates.php') ?>">
+    <a href="/views/pages/certificates.php">
         <i data-lucide="award"></i>
         <span>Certificates</span>
     </a>
@@ -123,7 +123,7 @@ function getMenuClass(string $targetPage, string $activePage): string {
 
 
         <li class="<?= getMenuClass('verify', $activePage) ?>">
-            <a href="<?= SecurityHelper::asset('views/pages/club_meetings.php') ?>">
+            <a href="/views/pages/club_meetings.php">
                 <i data-lucide="award"></i>
                 <span>Club Meetings</span>
             </a>
