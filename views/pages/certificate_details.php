@@ -113,12 +113,21 @@ if(isset($_POST['send_emails'])){
 
     foreach($certificates as $certificate){
 
-        $pdfPath =
-            dirname(__DIR__,2)
-            . '/public/'
-            . $certificate['pdf_path'];
+        $pdfPath = $certificate['pdf_path'];
 
-        if(file_exists($pdfPath)){
+if (file_exists($pdfPath)) {
+
+    MailHelper::sendCertificate(
+        $certificate['email'],
+        $certificate['participant_name'],
+        $pdfPath
+    );
+
+} else {
+
+    error_log("Certificate not found: " . $pdfPath);
+
+}
 
             MailHelper::sendCertificate(
                 $certificate['email'],
@@ -266,26 +275,7 @@ if ($type === 'Coordinator') {
             $pdfFileName =
             $certificateCode . '.pdf';
 
-            $pdfPath = '/tmp/' . $pdfFileName;
-
-file_put_contents(
-    $pdfPath,
-    $dompdf->output()
-);
-
-echo "PDF saved to: " . $pdfPath;
-exit;
-
-            $pdfPath =
-            dirname(__DIR__,2)
-            . '/public/assets/storage/certificates/'
-            . $pdfFileName;
-
-            $certificateDir = dirname($pdfPath);
-
-if (!is_dir($certificateDir)) {
-    mkdir($certificateDir, 0775, true);
-}
+      $pdfPath = '/tmp/' . $pdfFileName;
 
 file_put_contents(
     $pdfPath,
@@ -329,13 +319,13 @@ if ($stmtCheckCertificate->fetch()) {
             ");
 
             $stmtInsert->execute([
-                $eventId,
-                $participant['participant_name'],
-                $participant['enrollment_no'],
-                $type,
-                $certificateCode,
-                'assets/storage/certificates/' . $pdfFileName
-            ]);
+    $eventId,
+    $participant['participant_name'],
+    $participant['enrollment_no'],
+    $type,
+    $certificateCode,
+    '/tmp/' . $pdfFileName
+]);
 
         }
     }
