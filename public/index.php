@@ -133,6 +133,12 @@ case '/views/pages/attendance_details.php':
     require_once $basePath . '/views/pages/attendance_details.php';
     exit;
 
+case '/participants':
+case '/participants.php':
+case '/views/pages/participants.php':
+    require_once $basePath . '/views/pages/participants.php';
+    exit;
+
 case '/event_registration':
 case '/event_registration.php':
 case '/views/pages/event_registration.php':

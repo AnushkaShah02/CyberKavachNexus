@@ -71,6 +71,6 @@ class SecurityHelper {
     }
 
     // Pages and APIs
-    return '/index.php/' . $path;
+    return '/' . ltrim($path, '/');
 }
 }

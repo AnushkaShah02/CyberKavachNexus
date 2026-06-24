@@ -713,6 +713,12 @@ border-color:rgba(255,255,255,.1);
                         <div class="right-section-title">Assign New Task</div>
                         <div class="task-card">
                             <form method="POST">
+
+                                 
+<input type="hidden"
+       name="csrf_token"
+       value="<?= SecurityHelper::generateCsrfToken() ?>">
+       
                                 <input type="hidden" name="event_id" value="<?= $workspace['event_id'] ?>">
                                 
                                 <input type="text" name="task_title" class="form-input" style="padding: 0.5rem; margin-bottom: 0.5rem;" placeholder="Task Title" required>
