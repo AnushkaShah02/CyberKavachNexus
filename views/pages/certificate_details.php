@@ -138,7 +138,7 @@ if (file_exists($pdfPath)) {
     }
 
     $emailSuccess = true;
-}
+
 
 
 if (isset($_POST['generate'])) {
