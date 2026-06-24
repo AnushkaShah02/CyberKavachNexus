@@ -8,16 +8,19 @@ use PHPMailer\PHPMailer\Exception;
 class MailHelper
 {
     public static function sendCertificate(
-        string $email,
-        string $name,
-        string $pdfPath
-    ): bool {
+    string $email,
+    string $name,
+    string $pdfPath
+): bool {
 
-        $mail = new PHPMailer(true);
+    $mail = new PHPMailer(true);
 
-        try {
+    $mail->SMTPDebug = 2;
+    $mail->Debugoutput = 'html';
 
-            $mail->isSMTP();
+    try {
+
+        $mail->isSMTP();
 
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
@@ -60,7 +63,9 @@ CyberKavach Nexus";
 
         } catch (Exception $e) {
 
-            return false;
-        }
+    error_log("MAIL ERROR: " . $mail->ErrorInfo);
+
+    return false;
+}
     }
 }

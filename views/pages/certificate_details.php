@@ -104,40 +104,31 @@ if(isset($_POST['send_emails'])){
         WHERE c.event_id = ?
     ");
 
-    $stmtCertificates->execute([
-        $eventId
-    ]);
+    $stmtCertificates->execute([$eventId]);
 
-    $certificates =
-        $stmtCertificates->fetchAll();
+    $certificates = $stmtCertificates->fetchAll();
 
     foreach($certificates as $certificate){
 
         $pdfPath = $certificate['pdf_path'];
 
-if (file_exists($pdfPath)) {
-
-    MailHelper::sendCertificate(
-        $certificate['email'],
-        $certificate['participant_name'],
-        $pdfPath
-    );
-
-} else {
-
-    error_log("Certificate not found: " . $pdfPath);
-
-}
+        if(file_exists($pdfPath)){
 
             MailHelper::sendCertificate(
                 $certificate['email'],
                 $certificate['participant_name'],
                 $pdfPath
             );
+
+        } else {
+
+            error_log("Certificate not found: " . $pdfPath);
+
         }
     }
 
     $emailSuccess = true;
+}
 
 
 
