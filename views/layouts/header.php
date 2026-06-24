@@ -292,7 +292,13 @@ border-color:transparent;
 
 <body>
 
-<div id="splash-screen">
+<?php
+$currentPage = basename($_SERVER['PHP_SELF']);
+
+if ($currentPage === 'login.php'):
+?>
+
+<div id="splash-screen"></div>
 
     <div class="cyber-grid"></div>
 
@@ -341,6 +347,8 @@ window.addEventListener("load", () => {
 
 });
 </script>
+
+<?php endif; ?>
 
 <div class="toast-container" id="toastContainer"></div>
 
