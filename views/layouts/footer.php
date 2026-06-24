@@ -8,3 +8,4 @@ use CyberKavach\Nexus\Helpers\SecurityHelper;
     
 </body>
 </html>
+<?php ob_end_flush(); ?>
