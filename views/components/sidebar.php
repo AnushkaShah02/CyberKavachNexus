@@ -61,7 +61,7 @@ function getMenuClass(string $targetPage, string $activePage): string {
         <?php if($user['role_name'] !== 'Faculty Coordinator'): ?>
         
         <li class="<?= getMenuClass('my_tasks', $activePage) ?>">
-    <a href="<?= SecurityHelper::asset('views/pages/my_tasks.php') ?>">
+    <a href="/views/pages/my_tasks.php">
         <i data-lucide="users"></i>
         <span>My Tasks</span>
     </a>
