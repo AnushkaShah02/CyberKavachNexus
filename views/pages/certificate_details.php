@@ -266,6 +266,9 @@ if ($type === 'Coordinator') {
             $pdfFileName =
             $certificateCode . '.pdf';
 
+            var_dump(dirname(__DIR__,2));
+            exit;
+
             $pdfPath =
             dirname(__DIR__,2)
             . '/public/assets/storage/certificates/'
