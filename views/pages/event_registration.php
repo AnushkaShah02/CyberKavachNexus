@@ -203,6 +203,11 @@ cursor:pointer;
 
 <input
     type="hidden"
+    name="csrf_token"
+    value="<?= SecurityHelper::generateCsrfToken() ?>">
+
+<input
+    type="hidden"
     name="event_id"
     value="<?= $event['id'] ?>">
 
