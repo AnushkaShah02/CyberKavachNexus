@@ -298,7 +298,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 if ($currentPage === 'login.php'):
 ?>
 
-<div id="splash-screen"></div>
+<div id="splash-screen">
 
     <div class="cyber-grid"></div>
 
@@ -335,15 +335,15 @@ window.addEventListener("load", () => {
 
         if(splash){
 
-            splash.style.opacity="0";
+            splash.style.opacity = "0";
 
-            setTimeout(()=>{
+            setTimeout(() => {
                 splash.remove();
-            },1000);
+            }, 1000);
 
         }
 
-    },3500);
+    }, 3500);
 
 });
 </script>
@@ -351,4 +351,5 @@ window.addEventListener("load", () => {
 <?php endif; ?>
 
 <div class="toast-container" id="toastContainer"></div>
+
 
