@@ -17,11 +17,11 @@ class Database {
     public static function getConnection(): PDO {
         if (self::$connection === null) {
             // Retrieve configuration with local fallback values for standard XAMPP setups
-            $host     = $_ENV['DB_HOST'] ?? '127.0.0.1';
-            $port     = $_ENV['DB_PORT'] ?? '3306';
-            $dbName   = $_ENV['DB_DATABASE'] ?? 'cyber_kavach_db';
-            $username = $_ENV['DB_USERNAME'] ?? 'root';
-            $password = $_ENV['DB_PASSWORD'] ?? '';
+            $host     = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?? '127.0.0.1';
+$port     = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?? '3306';
+$dbName   = $_ENV['DB_DATABASE'] ?? getenv('DB_DATABASE') ?? 'defaultdb';
+$username = $_ENV['DB_USERNAME'] ?? getenv('DB_USERNAME') ?? 'root';
+$password = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?? '';
             $charset  = 'utf8mb4';
 
             $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset={$charset}";
