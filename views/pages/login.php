@@ -6,7 +6,6 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Redirect before output
 if (!empty($_SESSION['user']['id'])) {
-    $_SESSION['show_splash'] = true;
 
     header('Location: /views/pages/dashboard.php');
 
@@ -15,7 +14,7 @@ if (!empty($_SESSION['user']['id'])) {
 
 $pageTitle = 'Login - CyberKavach Nexus';
 
-$_SESSION['show_splash'] = true;
+
 
 require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
 

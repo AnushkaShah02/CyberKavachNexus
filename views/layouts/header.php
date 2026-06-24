@@ -292,12 +292,6 @@ border-color:transparent;
 
 <body>
 
-<?php
-$currentPage = basename($_SERVER['PHP_SELF']);
-
-if ($currentPage == 'login.php'):
-?>
-
 <div id="splash-screen">
 
     <div class="cyber-grid"></div>
@@ -322,55 +316,31 @@ if ($currentPage == 'login.php'):
 </div>
 
 <script>
+window.addEventListener("load", () => {
 
-window.addEventListener("load",()=>{
+    if(window.lucide){
+        lucide.createIcons();
+    }
 
-    lucide.createIcons();
+    setTimeout(() => {
 
-    setTimeout(()=>{
+        const splash =
+            document.getElementById("splash-screen");
 
-        document.getElementById("splash-screen").style.opacity="0";
+        if(splash){
 
-        setTimeout(()=>{
-            document.getElementById("splash-screen").remove();
-        },1000);
+            splash.style.opacity="0";
+
+            setTimeout(()=>{
+                splash.remove();
+            },1000);
+
+        }
 
     },3500);
 
 });
-
 </script>
-
-<?php endif; ?>
 
 <div class="toast-container" id="toastContainer"></div>
-
-<?php if (!empty($_SESSION['show_splash'])): ?>
-
-<script>
-
-window.addEventListener("load",()=>{
-
-    lucide.createIcons();
-
-    setTimeout(()=>{
-
-        const splash=document.getElementById("splash-screen");
-
-        splash.style.opacity="0";
-
-        setTimeout(()=>{
-            splash.remove();
-        },1000);
-
-    },4500);
-
-});
-
-</script>
-
-<?php
-unset($_SESSION['show_splash']);
-endif;
-?>
 
