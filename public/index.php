@@ -52,12 +52,12 @@ $csrfToken = SecurityHelper::generateCsrfToken();
 CSRFMiddleware::handle();
 
 // 4. Basic URI Dispatch Routing (Decoupled Front-Controller logic)
-$projectUrlPath = '/cyber2';
+$projectUrlPath = '';
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-$requestUri = str_replace('/cyber2/public/index.php', '', $requestUri);
-$requestUri = str_replace('/cyber2', '', $requestUri);
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$requestUri = '/' . trim($requestUri, '/');
 
 $requestUri = '/' . trim($requestUri, '/');
 
