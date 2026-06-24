@@ -2,26 +2,17 @@
 ob_start();
 
 error_reporting(E_ALL);
-ini_set('display_errors',1);
+ini_set('display_errors', 1);
 
-require_once dirname(__DIR__,2).'/vendor/autoload.php';
-
-use CyberKavach\Nexus\Helpers\SecurityHelper;
-
-if(session_status()===PHP_SESSION_NONE){
-    session_start();
-}
-?>
-ini_set('display_errors',1);
-
-require_once dirname(__DIR__,2).'/vendor/autoload.php';
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use CyberKavach\Nexus\Helpers\SecurityHelper;
 
-if(session_status()===PHP_SESSION_NONE){
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +27,6 @@ if(session_status()===PHP_SESSION_NONE){
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
 
 <style>
-
 #splash-screen{
 position:fixed;
 inset:0;

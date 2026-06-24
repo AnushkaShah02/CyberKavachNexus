@@ -1,26 +1,19 @@
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-
-
-// views/pages/login.php
-
-$pageTitle = 'Login - CyberKavach Nexus';
-require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
-
-
-
-// Redirect if user is already logged in
-if (!empty($_SESSION['user']) && isset($_SESSION['user']['id'])) {
-    $projectUrlPath = '';
-    if (preg_match('/^(.*?)\/(public|views|src|config)/', $_SERVER['SCRIPT_NAME'] ?? '', $matches)) {
-        $projectUrlPath = $matches[1];
-    }
-    header('Location: ' . $projectUrlPath . '/public/index.php/views/pages/dashboard.php');
+// Redirect before output
+if (!empty($_SESSION['user']['id'])) {
+    header('Location: /views/pages/dashboard.php');
     exit;
 }
+
+$pageTitle = 'Login - CyberKavach Nexus';
+
+require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
+
 ?>
 
 
