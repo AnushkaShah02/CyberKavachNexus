@@ -90,7 +90,7 @@ class AuthController {
 $_SESSION['show_splash'] = true;
 
 ResponseHelper::sendJsonResponse(true, 200, 'Login successful.', [
-    'redirect' => '/cyber2/public/index.php/dashboard'
+    'redirect' => '/dashboard'
 ]);
     }
 

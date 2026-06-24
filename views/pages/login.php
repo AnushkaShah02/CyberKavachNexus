@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('/cyber2/public/api/auth.php?action=login', {
+            const response = await fetch('/api/auth.php?action=login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

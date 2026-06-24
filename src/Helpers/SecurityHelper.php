@@ -67,10 +67,10 @@ class SecurityHelper {
         str_starts_with($path, 'assets/') ||
         str_starts_with($path, 'uploads/')
     ) {
-        return '/cyber2/public/' . $path;
+        return '/' . $path;
     }
 
     // Pages and APIs
-    return '/cyber2/public/index.php/' . $path;
+    return '/index.php/' . $path;
 }
 }

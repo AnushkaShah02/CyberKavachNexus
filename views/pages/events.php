@@ -429,21 +429,22 @@ require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
 
     <div class="registration-url">
 
-        <span>
-            localhost/cyber2/...event_id=<?= $event['id'] ?>
-        </span>
+    <span>
+        /event_registration.php?event_id=<?= $event['id'] ?>
+    </span>
 
-        <button
-onclick="
-navigator.clipboard.writeText(
-'http://localhost/cyber2/views/pages/event_registration.php?event_id=<?= $event['id'] ?>'
-);
-showToast('Registration link copied','success');
-">
-📋 Copy
-</button>
+    <button
+        onclick="
+            navigator.clipboard.writeText(
+                window.location.origin + '/event_registration.php?event_id=<?= $event['id'] ?>'
+            );
+            showToast('Registration link copied','success');
+        "
+    >
+        📋 Copy
+    </button>
 
-    </div>
+</div>
 
 </div>
 
