@@ -271,14 +271,17 @@ if ($type === 'Coordinator') {
             . '/public/assets/storage/certificates/'
             . $pdfFileName;
 
-            if (!is_dir(dirname($pdfPath))) {
-                mkdir(dirname($pdfPath),0777,true);
-            }
+            $certificateDir = dirname($pdfPath);
 
-            file_put_contents(
-                $pdfPath,
-                $dompdf->output()
-            );
+if (!is_dir($certificateDir)) {
+    mkdir($certificateDir, 0775, true);
+}
+
+file_put_contents(
+    $pdfPath,
+    $dompdf->output()
+);
+
 
             $stmtCheckCertificate = $db->prepare("
 SELECT id
