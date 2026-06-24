@@ -147,6 +147,13 @@ $stmt->execute([$id]);
 
 $workspace = $stmt->fetch();
 
+if (!$workspace) {
+    die(
+        'Workspace not found. Workspace ID: ' .
+        htmlspecialchars($id)
+    );
+}
+
 $stmtMsg = $db->prepare("
     SELECT
         wm.*,

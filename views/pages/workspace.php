@@ -78,8 +78,8 @@ elseif(str_contains($name,"documentation")){
         <?= SecurityHelper::escape($workspace['name']) ?>
     </h3>
 
-    <a href="/workspace_details.php?id="<?= $workspace['id'] ?>"
-class="workspace-open-btn">
+    <a href="/workspace_details?id=<?= $workspace['id'] ?>"
+class="workspace-open-btn"></a>
 
 Open
 

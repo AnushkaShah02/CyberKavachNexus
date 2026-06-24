@@ -430,14 +430,14 @@ require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
     <div class="registration-url">
 
     <span>
-        /event_registration.php?event_id=<?= $event['id'] ?>
-    </span>
+    /views/pages/event_registration?event_id=<?= $event['id'] ?>
+</span>
 
     <button
         onclick="
             navigator.clipboard.writeText(
-                window.location.origin + '/event_registration.php?event_id=<?= $event['id'] ?>'
-            );
+    window.location.origin + '/event_registration?event_id=<?= $event['id'] ?>'
+);
             showToast('Registration link copied','success');
         "
     >

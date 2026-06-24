@@ -133,6 +133,12 @@ case '/views/pages/attendance_details.php':
     require_once $basePath . '/views/pages/attendance_details.php';
     exit;
 
+case '/event_registration':
+case '/event_registration.php':
+case '/views/pages/event_registration.php':
+    require_once $basePath . '/views/pages/event_registration.php';
+    exit;
+
     default:
         // Direct browser requests targeting core view pages (fallback routing)
         if (preg_match('/^\/views\/pages\/(.+)\.php$/', $requestUri, $matches)) {
