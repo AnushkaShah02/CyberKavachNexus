@@ -266,8 +266,15 @@ if ($type === 'Coordinator') {
             $pdfFileName =
             $certificateCode . '.pdf';
 
-            var_dump(dirname(__DIR__,2));
-            exit;
+            $pdfPath = '/tmp/' . $pdfFileName;
+
+file_put_contents(
+    $pdfPath,
+    $dompdf->output()
+);
+
+echo "PDF saved to: " . $pdfPath;
+exit;
 
             $pdfPath =
             dirname(__DIR__,2)
