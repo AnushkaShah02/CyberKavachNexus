@@ -26,4 +26,6 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
 
 RUN composer install --no-dev --optimize-autoloader
 
+RUN a2enmod rewrite
+
 EXPOSE 80
