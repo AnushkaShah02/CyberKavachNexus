@@ -14,9 +14,10 @@ if (!empty($_SESSION['user']['id'])) {
 
 $pageTitle = 'Login - CyberKavach Nexus';
 
-
+$isLoginPage = true;
 
 require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
+
 
 ?>
 

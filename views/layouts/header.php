@@ -290,13 +290,13 @@ border-color:transparent;
 
 </head>
 
+<?php
+$isLoginPage = $isLoginPage ?? false;
+?>
+
 <body>
 
-<?php
-$currentPage = basename($_SERVER['PHP_SELF']);
-
-if ($currentPage === 'login.php'):
-?>
+<?php if (!empty($isLoginPage)): ?>
 
 <div id="splash-screen">
 
