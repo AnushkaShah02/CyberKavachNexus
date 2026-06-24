@@ -63,9 +63,12 @@ CyberKavach Nexus";
 
         } catch (Exception $e) {
 
-    error_log("MAIL ERROR: " . $mail->ErrorInfo);
-
-    return false;
+    die(
+        "MAIL ERROR:<br>" .
+        $mail->ErrorInfo .
+        "<br><br>" .
+        $e->getMessage()
+    );
 }
     }
 }
