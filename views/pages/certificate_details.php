@@ -115,32 +115,22 @@ if(isset($_POST['send_emails'])){
 
     foreach($certificates as $certificate){
 
-        $pdfPath = $certificate['pdf_path'];
+    $pdfPath = $certificate['pdf_path'];
 
-        echo "<pre>";
+    if (!file_exists($pdfPath)) {
+        continue;
+    }
 
-echo "Email: " . $certificate['email'] . PHP_EOL;
-echo "PDF Path: " . $pdfPath . PHP_EOL;
-
-if (!file_exists($pdfPath)) {
-    die("❌ PDF NOT FOUND: " . $pdfPath);
-}
-
-echo "✅ PDF FOUND" . PHP_EOL;
-
-$result = MailHelper::sendCertificate(
+    $result = MailHelper::sendCertificate(
     $certificate['email'],
     $certificate['participant_name'],
     $pdfPath
 );
 
-echo "Mail Result: ";
-var_dump($result);
-
-echo "</pre>";
-
-exit;
-    }
+if (!$result) {
+    // optional: log the error
+}
+}
 
     $emailSuccess = true;
 }
@@ -283,40 +273,19 @@ if ($type === 'Coordinator') {
 
       $pdfDirectory = dirname(__DIR__, 2) . '/storage/certificates/';
 
-echo "<pre>";
-
-echo "Project Root:\n";
-echo dirname(__DIR__,2);
-
-echo "\n\nPDF Directory:\n";
-echo $pdfDirectory;
+$pdfDirectory = dirname(__DIR__, 2) . '/storage/certificates/';
 
 if (!is_dir($pdfDirectory)) {
-
-    mkdir($pdfDirectory,0777,true);
-
-    echo "\nDirectory Created";
+    mkdir($pdfDirectory, 0777, true);
 }
 
 $pdfPath = $pdfDirectory . $pdfFileName;
 
-echo "\n\nSaving PDF To:\n";
-echo $pdfPath;
+file_put_contents($pdfPath, $dompdf->output());
 
-$result = file_put_contents(
-    $pdfPath,
-    $dompdf->output()
-);
-
-echo "\n\nBytes Written:";
-var_dump($result);
-
-echo "\n\nFile Exists:";
-var_dump(file_exists($pdfPath));
-
-echo "</pre>";
-
-exit;
+if (!file_exists($pdfPath)) {
+    die("PDF NOT CREATED");
+}
 
             $stmtCheckCertificate = $db->prepare("
 SELECT id
