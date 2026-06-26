@@ -324,7 +324,14 @@ if ($stmtCheckCertificate->fetch()) {
             )
             ");
 
-            $result = $stmtInsert->execute([
+            if (!$stmtInsert) {
+    die("<pre>PREPARE FAILED\n" . print_r($db->errorInfo(), true) . "</pre>");
+}
+
+echo "INSERT PREPARED<br>";
+flush();
+
+         $result = $stmtInsert->execute([
     $eventId,
     $participant['participant_name'],
     $participant['enrollment_no'],
@@ -332,6 +339,14 @@ if ($stmtCheckCertificate->fetch()) {
     $certificateCode,
     '/tmp/' . $pdfFileName
 ]);
+
+echo "<pre>";
+echo "Execute Result: ";
+var_dump($result);
+echo "\n";
+print_r($stmtInsert->errorInfo());
+echo "</pre>";
+exit;
 
 echo "<pre>";
 
