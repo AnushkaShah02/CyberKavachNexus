@@ -13,6 +13,7 @@ use PHPMailer\PHPMailer\Exception;
 use CyberKavach\Nexus\Helpers\MailHelper;
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+die("YOU ARE EDITING THE CORRECT FILE");
 
 AuthMiddleware::handle();
 
@@ -133,6 +134,24 @@ if(isset($_POST['send_emails'])){
 
 
 if (isset($_POST['generate'])) {
+
+    echo "<pre>";
+
+echo "GENERATE BUTTON CLICKED\n";
+
+echo "POST DATA:\n";
+print_r($_POST);
+
+echo "\n\n";
+
+echo "TOTAL TEAMS: ".count($teams)."\n";
+
+foreach($teams as $team=>$data){
+    echo $team." -> ".count($data['members'])." members\n";
+}
+
+echo "</pre>";
+exit;
 
 foreach ($_POST['certificate_type'] as $teamNameHash => $type) {
 
@@ -276,9 +295,6 @@ if (!file_exists($pdfPath)) {
     die("PDF DOES NOT EXIST AFTER SAVING");
 }
 
-echo "PDF CREATED:<br>" . $pdfPath;
-exit;
-
 
             $stmtCheckCertificate = $db->prepare("
 SELECT id
@@ -315,7 +331,7 @@ if ($stmtCheckCertificate->fetch()) {
             )
             ");
 
-            $stmtInsert->execute([
+            $result = $stmtInsert->execute([
     $eventId,
     $participant['participant_name'],
     $participant['enrollment_no'],
@@ -323,6 +339,21 @@ if ($stmtCheckCertificate->fetch()) {
     $certificateCode,
     '/tmp/' . $pdfFileName
 ]);
+
+echo "<pre>";
+
+echo "Participant: " . $participant['participant_name'] . "\n";
+echo "Certificate Code: " . $certificateCode . "\n";
+echo "PDF Path: " . $pdfPath . "\n";
+echo "File Exists: " . (file_exists($pdfPath) ? "YES" : "NO") . "\n";
+echo "Database Insert: " . ($result ? "SUCCESS" : "FAILED") . "\n";
+
+if (!$result) {
+    print_r($stmtInsert->errorInfo());
+}
+
+echo "</pre>";
+exit;
 
         }
     }
