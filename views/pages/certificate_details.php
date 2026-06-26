@@ -289,11 +289,13 @@ $pdfPath = $pdfDirectory . $pdfFileName;
 
 
 
-file_put_contents($pdfPath, $dompdf->output());
+$result = file_put_contents($pdfPath, $dompdf->output());
 
 echo "<pre>";
-echo "Saved to: " . $pdfPath . PHP_EOL;
-echo "Exists after save: ";
+echo "Saved To: " . $pdfPath . PHP_EOL;
+echo "Bytes Written: ";
+var_dump($result);
+echo "Exists After Save: ";
 var_dump(file_exists($pdfPath));
 exit;
 
