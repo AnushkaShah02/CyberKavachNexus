@@ -268,10 +268,16 @@ if ($type === 'Coordinator') {
 
       $pdfPath = '/tmp/' . $pdfFileName;
 
-file_put_contents(
-    $pdfPath,
-    $dompdf->output()
-);
+if (file_put_contents($pdfPath, $dompdf->output()) === false) {
+    die("FAILED TO SAVE PDF");
+}
+
+if (!file_exists($pdfPath)) {
+    die("PDF DOES NOT EXIST AFTER SAVING");
+}
+
+echo "PDF CREATED:<br>" . $pdfPath;
+exit;
 
 
             $stmtCheckCertificate = $db->prepare("
