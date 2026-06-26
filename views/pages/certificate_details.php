@@ -13,7 +13,6 @@ use PHPMailer\PHPMailer\Exception;
 use CyberKavach\Nexus\Helpers\MailHelper;
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-die("YOU ARE EDITING THE CORRECT FILE");
 
 AuthMiddleware::handle();
 
