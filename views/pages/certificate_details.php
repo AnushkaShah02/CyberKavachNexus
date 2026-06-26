@@ -287,16 +287,15 @@ if (!is_dir($pdfDirectory)) {
 
 $pdfPath = $pdfDirectory . $pdfFileName;
 
+
+
 file_put_contents($pdfPath, $dompdf->output());
 
 echo "<pre>";
-echo $pdfPath . PHP_EOL;
+echo "Saved to: " . $pdfPath . PHP_EOL;
+echo "Exists after save: ";
 var_dump(file_exists($pdfPath));
 exit;
-
-if (!file_exists($pdfPath)) {
-    die("PDF NOT CREATED");
-}
 
             $stmtCheckCertificate = $db->prepare("
 SELECT id
