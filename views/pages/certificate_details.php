@@ -289,6 +289,11 @@ $pdfPath = $pdfDirectory . $pdfFileName;
 
 file_put_contents($pdfPath, $dompdf->output());
 
+echo "<pre>";
+echo $pdfPath . PHP_EOL;
+var_dump(file_exists($pdfPath));
+exit;
+
 if (!file_exists($pdfPath)) {
     die("PDF NOT CREATED");
 }
