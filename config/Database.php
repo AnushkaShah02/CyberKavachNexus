@@ -17,11 +17,11 @@ class Database {
     public static function getConnection(): PDO {
         if (self::$connection === null) {
             // Retrieve configuration with local fallback values for standard XAMPP setups
-         $host = '127.0.0.1';
-$port = '3306';
-$dbName = 'cyber_kavach_db';
-$username = 'root';
-$password = '';
+         $host = $_ENV['DB_HOST'] ?? getenv('DB_HOST');
+$port = $_ENV['DB_PORT'] ?? getenv('DB_PORT');
+$dbName = $_ENV['DB_DATABASE'] ?? getenv('DB_DATABASE');
+$username = $_ENV['DB_USERNAME'] ?? getenv('DB_USERNAME');
+$password = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD');
             $charset  = 'utf8mb4';
 
             $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset={$charset}";
@@ -34,8 +34,7 @@ $password = '';
 
             try {
                 self::$connection = new PDO($dsn, $username, $password, $options);
-                echo "CONNECTED DATABASE: " . self::$connection->query("SELECT DATABASE()")->fetchColumn();
-exit;
+            
             } catch (PDOException $e) {
                 // Graceful fallback for API routes vs direct views
                 if (php_sapi_name() !== 'cli' && !headers_sent()) {
