@@ -142,9 +142,7 @@ foreach ($_POST['certificate_type'] as $teamNameHash => $type) {
         }
 
         foreach ($team['members'] as $participant) {
-            echo "<h3>Processing: " . $participant['participant_name'] . "</h3>";
-flush();
-
+        
         $stmtCheck = $db->prepare("
 SELECT id
 FROM certificates
@@ -263,26 +261,25 @@ if ($type === 'Coordinator') {
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4','landscape');
             $dompdf->render();
-            echo "PDF rendered successfully<br>";
-flush();
-
-echo "Reached after render<br>";
-flush();
+    
 
             $pdfFileName =
             $certificateCode . '.pdf';
 
-      $pdfPath = '/tmp/' . $pdfFileName;
+      $pdfDirectory = dirname(__DIR__, 2) . '/storage/certificates/';
 
-echo "Saving PDF to: " . $pdfPath . "<br>";
-flush();
+if (!is_dir($pdfDirectory)) {
+    mkdir($pdfDirectory, 0777, true);
+}
+
+$pdfPath = $pdfDirectory . $pdfFileName;
+
+
 
 if (file_put_contents($pdfPath, $dompdf->output()) === false) {
     die("FAILED TO SAVE PDF");
 }
 
-echo "PDF saved successfully<br>";
-flush();
 
 if (!file_exists($pdfPath)) {
     die("PDF DOES NOT EXIST AFTER SAVING");
@@ -305,7 +302,7 @@ $stmtCheckCertificate->execute([
 ]);
 
 if ($stmtCheckCertificate->fetch()) {
-    die("Certificate already exists for " . $participant['participant_name']);
+    continue;
 }
 
             $stmtInsert = $db->prepare("
@@ -328,8 +325,7 @@ if ($stmtCheckCertificate->fetch()) {
     die("<pre>PREPARE FAILED\n" . print_r($db->errorInfo(), true) . "</pre>");
 }
 
-echo "INSERT PREPARED<br>";
-flush();
+
 
          $result = $stmtInsert->execute([
     $eventId,
@@ -337,31 +333,12 @@ flush();
     $participant['enrollment_no'],
     $type,
     $certificateCode,
-    '/tmp/' . $pdfFileName
+   $pdfPath
 ]);
 
-echo "<pre>";
-echo "Execute Result: ";
-var_dump($result);
-echo "\n";
-print_r($stmtInsert->errorInfo());
-echo "</pre>";
-exit;
 
-echo "<pre>";
 
-echo "Participant: " . $participant['participant_name'] . "\n";
-echo "Certificate Code: " . $certificateCode . "\n";
-echo "PDF Path: " . $pdfPath . "\n";
-echo "File Exists: " . (file_exists($pdfPath) ? "YES" : "NO") . "\n";
-echo "Database Insert: " . ($result ? "SUCCESS" : "FAILED") . "\n";
 
-if (!$result) {
-    print_r($stmtInsert->errorInfo());
-}
-
-echo "</pre>";
-exit;
 
         }
     }
