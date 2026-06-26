@@ -14,6 +14,9 @@ use CyberKavach\Nexus\Helpers\MailHelper;
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__, 2));
+$dotenv->safeLoad();
+
 AuthMiddleware::handle();
 
 $db = Database::getConnection();
