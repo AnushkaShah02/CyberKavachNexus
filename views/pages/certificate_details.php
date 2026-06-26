@@ -114,12 +114,18 @@ if(isset($_POST['send_emails'])){
     $certificates = $stmtCertificates->fetchAll();
 
     foreach($certificates as $certificate){
+    
+    echo "Sending to: " . $certificate['email'] . "<br>";
+flush();
 
     $pdfPath = $certificate['pdf_path'];
 
-    if (!file_exists($pdfPath)) {
-        continue;
-    }
+    echo "<pre>";
+echo "Checking: " . $pdfPath . PHP_EOL;
+echo "Exists: ";
+var_dump(file_exists($pdfPath));
+echo "</pre>";
+exit;
 
     $result = MailHelper::sendCertificate(
     $certificate['email'],

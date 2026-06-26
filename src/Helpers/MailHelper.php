@@ -15,8 +15,7 @@ class MailHelper
 
     $mail = new PHPMailer(true);
 
-    $mail->SMTPDebug = 2;
-    $mail->Debugoutput = 'html';
+    $mail->SMTPDebug = 0;
 
     try {
 
@@ -57,9 +56,17 @@ Please find your certificate attached.
 Regards,
 CyberKavach Nexus";
 
+if (!file_exists($pdfPath)) {
+    die("Attachment not found: " . $pdfPath);
+}
+
             $mail->addAttachment($pdfPath);
 
-            return $mail->send();
+            if (!$mail->send()) {
+    die($mail->ErrorInfo);
+}
+
+return true;
 
         } catch (Exception $e) {
 
