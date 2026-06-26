@@ -18,6 +18,18 @@ AuthMiddleware::handle();
 
 $db = Database::getConnection();
 
+echo "<pre>";
+echo "ENV DB = ";
+var_dump($_ENV['DB_DATABASE'] ?? null);
+
+echo "GETENV DB = ";
+var_dump(getenv('DB_DATABASE'));
+
+echo "CONNECTED DB = ";
+echo $db->query("SELECT DATABASE()")->fetchColumn();
+
+exit;
+
 $eventId = $_GET['event_id'] ?? 0;
 
 $stmt = $db->prepare("
