@@ -133,25 +133,6 @@ if(isset($_POST['send_emails'])){
 
 
 if (isset($_POST['generate'])) {
-
-    echo "<pre>";
-
-echo "GENERATE BUTTON CLICKED\n";
-
-echo "POST DATA:\n";
-print_r($_POST);
-
-echo "\n\n";
-
-echo "TOTAL TEAMS: ".count($teams)."\n";
-
-foreach($teams as $team=>$data){
-    echo $team." -> ".count($data['members'])." members\n";
-}
-
-echo "</pre>";
-exit;
-
 foreach ($_POST['certificate_type'] as $teamNameHash => $type) {
 
     foreach ($teams as $teamName => $team) {
@@ -161,6 +142,8 @@ foreach ($_POST['certificate_type'] as $teamNameHash => $type) {
         }
 
         foreach ($team['members'] as $participant) {
+            echo "<h3>Processing: " . $participant['participant_name'] . "</h3>";
+flush();
 
         $stmtCheck = $db->prepare("
 SELECT id
@@ -280,15 +263,26 @@ if ($type === 'Coordinator') {
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4','landscape');
             $dompdf->render();
+            echo "PDF rendered successfully<br>";
+flush();
+
+echo "Reached after render<br>";
+flush();
 
             $pdfFileName =
             $certificateCode . '.pdf';
 
       $pdfPath = '/tmp/' . $pdfFileName;
 
+echo "Saving PDF to: " . $pdfPath . "<br>";
+flush();
+
 if (file_put_contents($pdfPath, $dompdf->output()) === false) {
     die("FAILED TO SAVE PDF");
 }
+
+echo "PDF saved successfully<br>";
+flush();
 
 if (!file_exists($pdfPath)) {
     die("PDF DOES NOT EXIST AFTER SAVING");
