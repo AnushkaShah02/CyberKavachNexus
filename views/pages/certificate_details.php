@@ -21,17 +21,7 @@ AuthMiddleware::handle();
 
 $db = Database::getConnection();
 
-echo "<pre>";
-echo "ENV DB = ";
-var_dump($_ENV['DB_DATABASE'] ?? null);
 
-echo "GETENV DB = ";
-var_dump(getenv('DB_DATABASE'));
-
-echo "CONNECTED DB = ";
-echo $db->query("SELECT DATABASE()")->fetchColumn();
-
-exit;
 
 $eventId = $_GET['event_id'] ?? 0;
 
@@ -293,23 +283,40 @@ if ($type === 'Coordinator') {
 
       $pdfDirectory = dirname(__DIR__, 2) . '/storage/certificates/';
 
+echo "<pre>";
+
+echo "Project Root:\n";
+echo dirname(__DIR__,2);
+
+echo "\n\nPDF Directory:\n";
+echo $pdfDirectory;
+
 if (!is_dir($pdfDirectory)) {
-    mkdir($pdfDirectory, 0777, true);
+
+    mkdir($pdfDirectory,0777,true);
+
+    echo "\nDirectory Created";
 }
 
 $pdfPath = $pdfDirectory . $pdfFileName;
 
+echo "\n\nSaving PDF To:\n";
+echo $pdfPath;
 
+$result = file_put_contents(
+    $pdfPath,
+    $dompdf->output()
+);
 
-if (file_put_contents($pdfPath, $dompdf->output()) === false) {
-    die("FAILED TO SAVE PDF");
-}
+echo "\n\nBytes Written:";
+var_dump($result);
 
+echo "\n\nFile Exists:";
+var_dump(file_exists($pdfPath));
 
-if (!file_exists($pdfPath)) {
-    die("PDF DOES NOT EXIST AFTER SAVING");
-}
+echo "</pre>";
 
+exit;
 
             $stmtCheckCertificate = $db->prepare("
 SELECT id
