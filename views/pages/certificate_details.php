@@ -127,19 +127,29 @@ if(isset($_POST['send_emails'])){
 
         $pdfPath = $certificate['pdf_path'];
 
-        if(file_exists($pdfPath)){
+        echo "<pre>";
 
-            MailHelper::sendCertificate(
-                $certificate['email'],
-                $certificate['participant_name'],
-                $pdfPath
-            );
+echo "Email: " . $certificate['email'] . PHP_EOL;
+echo "PDF Path: " . $pdfPath . PHP_EOL;
 
-        } else {
+if (!file_exists($pdfPath)) {
+    die("❌ PDF NOT FOUND: " . $pdfPath);
+}
 
-            error_log("Certificate not found: " . $pdfPath);
+echo "✅ PDF FOUND" . PHP_EOL;
 
-        }
+$result = MailHelper::sendCertificate(
+    $certificate['email'],
+    $certificate['participant_name'],
+    $pdfPath
+);
+
+echo "Mail Result: ";
+var_dump($result);
+
+echo "</pre>";
+
+exit;
     }
 
     $emailSuccess = true;
