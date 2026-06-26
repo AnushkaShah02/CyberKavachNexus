@@ -305,7 +305,7 @@ $stmtCheckCertificate->execute([
 ]);
 
 if ($stmtCheckCertificate->fetch()) {
-    continue;
+    die("Certificate already exists for " . $participant['participant_name']);
 }
 
             $stmtInsert = $db->prepare("
