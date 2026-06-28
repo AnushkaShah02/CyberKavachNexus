@@ -166,7 +166,7 @@ foreach ($participants as $p) {
     $teams[$teamName]['members'][] = $p;
 }
 
-// ── SEND EMAIL QUEUE WITH EPHEMERAL DISK FALLBACK ──
+// ── SEND EMAIL QUEUE WITH MEMORY-BASED ON-THE-FLY GENERATION ──
 if(isset($_POST['send_emails'])){
 
     $stmtCertificates = $db->prepare("
@@ -183,94 +183,92 @@ if(isset($_POST['send_emails'])){
     $certificates = $stmtCertificates->fetchAll();
 
     foreach($certificates as $certificate){
-        $pdfPath = $certificate['pdf_path'];
+        // Generate the PDF in memory
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new Dompdf($options);
 
-        // If the physical PDF has disappeared from Render's disk, recreate it on-the-fly
-        if (!file_exists($pdfPath)) {
-            $pdfDirectory = dirname($pdfPath) . '/';
-            if (!is_dir($pdfDirectory)) {
-                mkdir($pdfDirectory, 0777, true);
-            }
-
-            $options = new Options();
-            $options->set('isRemoteEnabled', true);
-            $dompdf = new Dompdf($options);
-
-            $type = $certificate['certificate_type'];
-            $certificateTitle = 'Certificate of Participation';
-            if($type === 'Winner'){
-                $certificateTitle = 'Certificate of Achievement';
-            }
-            if($type === 'Runner-up'){
-                $certificateTitle = 'Certificate of Excellence';
-            }
-            if($type === 'Coordinator'){
-                $certificateTitle = 'Certificate of Appreciation';
-            }
-
-            $charusatLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/charusat_logo.png';
-            $cyberLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/cyberkavach_logo.png';
-
-            $charusatLogo = '';
-            if (file_exists($charusatLogoPath)) {
-                $charusatLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($charusatLogoPath));
-            }
-            $cyberLogo = '';
-            if (file_exists($cyberLogoPath)) {
-                $cyberLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($cyberLogoPath));
-            }
-
-            $achievementText = 'for successfully participating in';
-            if ($type === 'Winner') {
-                $achievementText = 'for securing <b>WINNER</b> in';
-            }
-            if ($type === 'Runner-up') {
-                $achievementText = 'for securing <b>RUNNER-UP</b> in';
-            }
-            if ($type === 'Coordinator') {
-                $achievementText = 'for valuable contribution as <b>EVENT COORDINATOR</b> for';
-            }
-
-            $html = '
-            <html>
-            <body style="
-            font-family:Arial;
-            text-align:center;
-            padding:40px;
-            border:10px solid #2563eb;
-            ">
-            <table width="100%">
-            <tr>
-            <td align="left">
-            <img src="' . $charusatLogo . '" width="120">
-            </td>
-            <td align="right">
-            <img src="' . $cyberLogo . '" width="120">
-            </td>
-            </tr>
-            </table>
-            <h1>' . $certificateTitle . '</h1>
-            <p>This certificate is proudly awarded to</p>
-            <h2>' . htmlspecialchars($certificate['participant_name']) . '</h2>
-            <p>' . $achievementText . '</p>
-            <h3>' . htmlspecialchars($event['title']) . '</h3>
-            <p>Issued on: ' . date('d M Y') . '</p>
-            </body>
-            </html>';
-
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4','landscape');
-            $dompdf->render();
-
-            file_put_contents($pdfPath, $dompdf->output());
+        $type = $certificate['certificate_type'];
+        $certificateTitle = 'Certificate of Participation';
+        if($type === 'Winner'){
+            $certificateTitle = 'Certificate of Achievement';
+        }
+        if($type === 'Runner-up'){
+            $certificateTitle = 'Certificate of Excellence';
+        }
+        if($type === 'Coordinator'){
+            $certificateTitle = 'Certificate of Appreciation';
         }
 
-        // Email the freshly recreated PDF
+        $charusatLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/charusat_logo.png';
+        $cyberLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/cyberkavach_logo.png';
+
+        $charusatLogo = '';
+        if (file_exists($charusatLogoPath)) {
+            $charusatLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($charusatLogoPath));
+        }
+        $cyberLogo = '';
+        if (file_exists($cyberLogoPath)) {
+            $cyberLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($cyberLogoPath));
+        }
+
+        $achievementText = 'for successfully participating in';
+        if ($type === 'Winner') {
+            $achievementText = 'for securing <b>WINNER</b> in';
+        }
+        if ($type === 'Runner-up') {
+            $achievementText = 'for securing <b>RUNNER-UP</b> in';
+        }
+        if ($type === 'Coordinator') {
+            $achievementText = 'for valuable contribution as <b>EVENT COORDINATOR</b> for';
+        }
+
+        $html = '
+        <html>
+        <body style="
+        font-family:Arial;
+        text-align:center;
+        padding:40px;
+        border:10px solid #2563eb;
+        ">
+        <table width="100%">
+        <tr>
+        <td align="left">
+        <img src="' . $charusatLogo . '" width="120">
+        </td>
+        <td align="right">
+        <img src="' . $cyberLogo . '" width="120">
+        </td>
+        </tr>
+        </table>
+        <h1>' . $certificateTitle . '</h1>
+        <p>This certificate is proudly awarded to</p>
+        <h2>' . htmlspecialchars($certificate['participant_name']) . '</h2>
+        <p>' . $achievementText . '</p>
+        <h3>' . htmlspecialchars($event['title']) . '</h3>
+        <p>Issued on: ' . date('d M Y') . '</p>
+        </body>
+        </html>';
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4','landscape');
+        $dompdf->render();
+
+        // Save PDF to a temporary file (works on Windows, Linux, Render, and Railway)
+        $tempPdfPath = tempnam(sys_get_temp_dir(), 'cert_') . '.pdf';
+        file_put_contents($tempPdfPath, $dompdf->output());
+
+        // Send the email with the temporary attachment
         MailHelper::sendCertificate(
             $certificate['email'],
             $certificate['participant_name'],
-            $pdfPath
+            $tempPdfPath
         );
+
+        // Delete the temporary file from the disk immediately
+        if (file_exists($tempPdfPath)) {
+            unlink($tempPdfPath);
+        }
     }
 
     $emailSuccess = true;
@@ -299,90 +297,6 @@ if (isset($_POST['generate'])) {
                 }   
                 
                 $certificateCode = 'CK-' . strtoupper(substr(md5(uniqid()),0,10));
-
-                $options = new Options();
-                $options->set('isRemoteEnabled', true);
-                $dompdf = new Dompdf($options);
-
-                $certificateTitle = 'Certificate of Participation';
-                if($type === 'Winner'){
-                    $certificateTitle = 'Certificate of Achievement';
-                }
-                if($type === 'Runner-up'){
-                    $certificateTitle = 'Certificate of Excellence';
-                }
-                if($type === 'Coordinator'){
-                    $certificateTitle = 'Certificate of Appreciation';
-                }
-
-                $charusatLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/charusat_logo.png';
-                $cyberLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/cyberkavach_logo.png';
-
-                $charusatLogo = '';
-                if (file_exists($charusatLogoPath)) {
-                    $charusatLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($charusatLogoPath));
-                }
-                $cyberLogo = '';
-                if (file_exists($cyberLogoPath)) {
-                    $cyberLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($cyberLogoPath));
-                }
-
-                $achievementText = 'for successfully participating in';
-                if ($type === 'Winner') {
-                    $achievementText = 'for securing <b>WINNER</b> in';
-                }
-                if ($type === 'Runner-up') {
-                    $achievementText = 'for securing <b>RUNNER-UP</b> in';
-                }
-                if ($type === 'Coordinator') {
-                    $achievementText = 'for valuable contribution as <b>EVENT COORDINATOR</b> for';
-                }
-
-                $html = '
-                <html>
-                <body style="
-                font-family:Arial;
-                text-align:center;
-                padding:40px;
-                border:10px solid #2563eb;
-                ">
-                <table width="100%">
-                <tr>
-                <td align="left">
-                <img src="' . $charusatLogo . '" width="120">
-                </td>
-                <td align="right">
-                <img src="' . $cyberLogo . '" width="120">
-                </td>
-                </tr>
-                </table>
-                <h1>' . $certificateTitle . '</h1>
-                <p>This certificate is proudly awarded to</p>
-                <h2>' . htmlspecialchars($participant['participant_name']) . '</h2>
-                <p>' . $achievementText . '</p>
-                <h3>' . htmlspecialchars($event['title']) . '</h3>
-                <p>Issued on: ' . date('d M Y') . '</p>
-                </body>
-                </html>';
-
-                $dompdf->loadHtml($html);
-                $dompdf->setPaper('A4','landscape');
-                $dompdf->render();
-        
-                $pdfFileName = $certificateCode . '.pdf';
-                $pdfDirectory = dirname(__DIR__, 2) . '/storage/certificates/';
-
-                if (!is_dir($pdfDirectory)) {
-                    mkdir($pdfDirectory, 0777, true);
-                }
-
-                $pdfPath = $pdfDirectory . $pdfFileName;
-
-                file_put_contents($pdfPath, $dompdf->output());
-
-                if (!file_exists($pdfPath)) {
-                    die("PDF NOT CREATED");
-                }
 
                 $stmtCheckCertificate = $db->prepare("
                     SELECT id FROM certificates
@@ -415,7 +329,7 @@ if (isset($_POST['generate'])) {
                     $participant['enrollment_no'],
                     $type,
                     $certificateCode,
-                    $pdfPath
+                    null // Storing NULL because we generate files dynamically during emails
                 ]);
             }
         }

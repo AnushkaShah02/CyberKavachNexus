@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 use CyberKavach\Nexus\Config\Database;
 use CyberKavach\Nexus\Middleware\AuthMiddleware;
@@ -21,8 +21,6 @@ AuthMiddleware::handle();
 
 $db = Database::getConnection();
 
-
-
 $eventId = $_GET['event_id'] ?? 0;
 
 $stmt = $db->prepare("
@@ -32,7 +30,6 @@ $stmt = $db->prepare("
 ");
 
 $stmt->execute([$eventId]);
-
 $event = $stmt->fetch();
 
 if (!$event) {
@@ -84,19 +81,16 @@ $participants = $stmtParticipants->fetchAll();
 $teams = [];
 
 foreach ($participants as $p) {
-
     $teamName = $p['team_name'] ?: 'Individual';
-
     if (!isset($teams[$teamName])) {
-
         $teams[$teamName] = [
             'members' => []
         ];
     }
-
     $teams[$teamName]['members'][] = $p;
 }
 
+// ── SEND EMAIL QUEUE WITH MEMORY-BASED ON-THE-FLY GENERATION ──
 if(isset($_POST['send_emails'])){
 
     $stmtCertificates = $db->prepare("
@@ -110,258 +104,170 @@ if(isset($_POST['send_emails'])){
     ");
 
     $stmtCertificates->execute([$eventId]);
-
     $certificates = $stmtCertificates->fetchAll();
 
     foreach($certificates as $certificate){
-    
-    echo "Sending to: " . $certificate['email'] . "<br>";
-flush();
+        // Generate the PDF in memory on-the-fly [2]
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new Dompdf($options);
 
-    $pdfPath = $certificate['pdf_path'];
+        $type = $certificate['certificate_type'];
+        $certificateTitle = 'Certificate of Participation';
+        if($type === 'Winner'){
+            $certificateTitle = 'Certificate of Achievement';
+        }
+        if($type === 'Runner-up'){
+            $certificateTitle = 'Certificate of Excellence';
+        }
+        if($type === 'Coordinator'){
+            $certificateTitle = 'Certificate of Appreciation';
+        }
 
-    echo "<pre>";
-echo "Checking: " . $pdfPath . PHP_EOL;
-echo "Exists: ";
-var_dump(file_exists($pdfPath));
-echo "</pre>";
-exit;
+        $charusatLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/charusat_logo.png';
+        $cyberLogoPath = dirname(__DIR__,2) . '/public/assets/storage/logos/cyberkavach_logo.png';
 
-    $result = MailHelper::sendCertificate(
-    $certificate['email'],
-    $certificate['participant_name'],
-    $pdfPath
-);
+        $charusatLogo = '';
+        if (file_exists($charusatLogoPath)) {
+            $charusatLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($charusatLogoPath));
+        }
+        $cyberLogo = '';
+        if (file_exists($cyberLogoPath)) {
+            $cyberLogo = 'data:image/png;base64,' . base64_encode(file_get_contents($cyberLogoPath));
+        }
 
-if (!$result) {
-    // optional: log the error
-}
-}
+        $achievementText = 'for successfully participating in';
+        if ($type === 'Winner') {
+            $achievementText = 'for securing <b>WINNER</b> in';
+        }
+        if ($type === 'Runner-up') {
+            $achievementText = 'for securing <b>RUNNER-UP</b> in';
+        }
+        if ($type === 'Coordinator') {
+            $achievementText = 'for valuable contribution as <b>EVENT COORDINATOR</b> for';
+        }
+
+        $html = '
+        <html>
+        <body style="
+        font-family:Arial;
+        text-align:center;
+        padding:40px;
+        border:10px solid #2563eb;
+        ">
+        <table width="100%">
+        <tr>
+        <td align="left">
+        <img src="' . $charusatLogo . '" width="120">
+        </td>
+        <td align="right">
+        <img src="' . $cyberLogo . '" width="120">
+        </td>
+        </tr>
+        </table>
+        <h1>' . $certificateTitle . '</h1>
+        <p>This certificate is proudly awarded to</p>
+        <h2>' . htmlspecialchars($certificate['participant_name']) . '</h2>
+        <p>' . $achievementText . '</p>
+        <h3>' . htmlspecialchars($event['title']) . '</h3>
+        <p>Issued on: ' . date('d M Y') . '</p>
+        </body>
+        </html>';
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4','landscape');
+        $dompdf->render();
+
+        // Save PDF to a temporary file (works on Windows, Linux, Render, and Railway) [2]
+        $tempPdfPath = tempnam(sys_get_temp_dir(), 'cert_') . '.pdf';
+        file_put_contents($tempPdfPath, $dompdf->output());
+
+        // Send the email with the temporary attachment [2]
+        $sent = MailHelper::sendCertificate(
+            $certificate['email'],
+            $certificate['participant_name'],
+            $tempPdfPath
+        );
+
+        // Delete the temporary file from the disk immediately [2]
+        if (file_exists($tempPdfPath)) {
+            unlink($tempPdfPath);
+        }
+
+        // Mark as sent in database if email succeeded
+        if ($sent) {
+            $stmtUpdate = $db->prepare("UPDATE certificates SET email_sent = 1 WHERE id = ?");
+            $stmtUpdate->execute([$certificate['id']]);
+        }
+    }
 
     $emailSuccess = true;
 }
 
-
-
 if (isset($_POST['generate'])) {
-foreach ($_POST['certificate_type'] as $teamNameHash => $type) {
-
-    foreach ($teams as $teamName => $team) {
-
-        if (md5($teamName) !== $teamNameHash) {
-            continue;
-        }
-
-        foreach ($team['members'] as $participant) {
-        
-        $stmtCheck = $db->prepare("
-SELECT id
-FROM certificates
-WHERE
-    event_id = ?
-    AND participant_name = ?
-    AND certificate_type = ?
-");
-
-$stmtCheck->execute([
-    $eventId,
-    $participant['participant_name'],
-    $type
-]);
-
-if ($stmtCheck->fetch()) {
-    continue;
-}   
-        
-        $certificateCode =
-            'CK-' .
-            strtoupper(substr(md5(uniqid()),0,10));
-
-            $options = new Options();
-            $options->set('isRemoteEnabled', true);
-
-            $dompdf = new Dompdf($options);
-
-            $certificateTitle = 'Certificate of Participation';
-
-            if($type === 'Winner'){
-                $certificateTitle = 'Certificate of Achievement';
+    foreach ($_POST['certificate_type'] as $teamNameHash => $type) {
+        foreach ($teams as $teamName => $team) {
+            if (md5($teamName) !== $teamNameHash) {
+                continue;
             }
 
-            if($type === 'Runner-up'){
-                $certificateTitle = 'Certificate of Excellence';
+            foreach ($team['members'] as $participant) {
+                $stmtCheck = $db->prepare("
+                    SELECT id FROM certificates
+                    WHERE event_id = ? AND participant_name = ? AND certificate_type = ?
+                ");
+                $stmtCheck->execute([
+                    $eventId,
+                    $participant['participant_name'],
+                    $type
+                ]);
+
+                if ($stmtCheck->fetch()) {
+                    continue;
+                }   
+                
+                $certificateCode = 'CK-' . strtoupper(substr(md5(uniqid()),0,10));
+
+                $stmtCheckCertificate = $db->prepare("
+                    SELECT id FROM certificates
+                    WHERE event_id = ? AND enrollment_no = ? AND certificate_type = ?
+                ");
+                $stmtCheckCertificate->execute([
+                    $eventId,
+                    $participant['enrollment_no'],
+                    $type
+                ]);
+
+                if ($stmtCheckCertificate->fetch()) {
+                    continue;
+                }
+
+                $stmtInsert = $db->prepare("
+                    INSERT INTO certificates
+                    (event_id, participant_name, enrollment_no, certificate_type, certificate_code, pdf_path)
+                    VALUES
+                    (?, ?, ?, ?, ?, ?)
+                ");
+
+                if (!$stmtInsert) {
+                    die("<pre>PREPARE FAILED\n" . print_r($db->errorInfo(), true) . "</pre>");
+                }
+
+                $result = $stmtInsert->execute([
+                    $eventId,
+                    $participant['participant_name'],
+                    $participant['enrollment_no'],
+                    $type,
+                    $certificateCode,
+                    null // Storing NULL because we generate files dynamically during emails [2]
+                ]);
             }
-
-            if($type === 'Coordinator'){
-                $certificateTitle = 'Certificate of Appreciation';
-            }
-
-            $charusatLogoPath =
-            dirname(__DIR__,2)
-            . '/public/assets/storage/logos/charusat_logo.png';
-
-            $cyberLogoPath =
-            dirname(__DIR__,2)
-            . '/public/assets/storage/logos/cyberkavach_logo.png';
-
-            $charusatLogo =
-            'data:image/png;base64,' .
-            base64_encode(file_get_contents($charusatLogoPath));
-
-            $cyberLogo =
-            'data:image/png;base64,' .
-            base64_encode(file_get_contents($cyberLogoPath));
-
-            $achievementText = 'for successfully participating in';
-
-if ($type === 'Winner') {
-    $achievementText = 'for securing <b>WINNER</b> in';
-}
-
-if ($type === 'Runner-up') {
-    $achievementText = 'for securing <b>RUNNER-UP</b> in';
-}
-
-if ($type === 'Coordinator') {
-    $achievementText = 'for valuable contribution as <b>EVENT COORDINATOR</b> for';
-}
-
-            $html = '
-            <html>
-            <body style="
-            font-family:Arial;
-            text-align:center;
-            padding:40px;
-            border:10px solid #2563eb;
-            ">
-
-            <table width="100%">
-            <tr>
-            <td align="left">
-            <img src="' . $charusatLogo . '" width="120">
-            </td>
-
-            <td align="right">
-            <img src="' . $cyberLogo . '" width="120">
-            </td>
-            </tr>
-            </table>
-
-            <h1>' . $certificateTitle . '</h1>
-
-            <p>This certificate is proudly awarded to</p>
-
-            <h2>' .
-            htmlspecialchars($participant['participant_name']) .
-            '</h2>
-
-            <p>' . $achievementText . '</p>
-
-            <h3>' .
-            htmlspecialchars($event['title']) .
-            '</h3>
-
-            <p>
-            Issued on:
-            '.date('d M Y').'
-            </p>
-
-            </body>
-            </html>';
-
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4','landscape');
-            $dompdf->render();
-    
-
-            $pdfFileName =
-            $certificateCode . '.pdf';
-
-      $pdfDirectory = dirname(__DIR__, 2) . '/storage/certificates/';
-
-$pdfDirectory = dirname(__DIR__, 2) . '/storage/certificates/';
-
-if (!is_dir($pdfDirectory)) {
-    mkdir($pdfDirectory, 0777, true);
-}
-
-$pdfPath = $pdfDirectory . $pdfFileName;
-
-
-
-$result = file_put_contents($pdfPath, $dompdf->output());
-
-echo "<pre>";
-echo "Saved To: " . $pdfPath . PHP_EOL;
-echo "Bytes Written: ";
-var_dump($result);
-echo "Exists After Save: ";
-var_dump(file_exists($pdfPath));
-exit;
-
-            $stmtCheckCertificate = $db->prepare("
-SELECT id
-FROM certificates
-WHERE
-    event_id = ?
-    AND enrollment_no = ?
-    AND certificate_type = ?
-");
-
-$stmtCheckCertificate->execute([
-    $eventId,
-    $participant['enrollment_no'],
-    $type
-]);
-
-if ($stmtCheckCertificate->fetch()) {
-    continue;
-}
-
-            $stmtInsert = $db->prepare("
-            INSERT INTO certificates
-            (
-                event_id,
-                participant_name,
-                enrollment_no,
-                certificate_type,
-                certificate_code,
-                pdf_path
-            )
-            VALUES
-            (
-                ?, ?, ?, ?, ?, ?
-            )
-            ");
-
-            if (!$stmtInsert) {
-    die("<pre>PREPARE FAILED\n" . print_r($db->errorInfo(), true) . "</pre>");
-}
-
-
-
-         $result = $stmtInsert->execute([
-    $eventId,
-    $participant['participant_name'],
-    $participant['enrollment_no'],
-    $type,
-    $certificateCode,
-   $pdfPath
-]);
-
-
-
-
-
         }
     }
+    $success = true;
 }
 
-$success = true;
-        }
-
 $participantMap = [];
-
 foreach ($participants as $p) {
     $participantMap[$p['id']] = $p;
 }
@@ -373,211 +279,119 @@ $stmtRegistered = $db->prepare("
     FROM participant_registrations
     WHERE event_id = ?
 ");
-
 $stmtRegistered->execute([$eventId]);
-
 $totalRegistered = $stmtRegistered->fetchColumn();
 
 $stmtTeams = $db->prepare("
     SELECT COUNT(DISTINCT team_name)
     FROM participant_registrations
-    WHERE
-        event_id = ?
-        AND team_name IS NOT NULL
-        AND team_name != ''
+    WHERE event_id = ? AND team_name IS NOT NULL AND team_name != ''
 ");
-
 $stmtTeams->execute([$eventId]);
-
 $totalTeams = $stmtTeams->fetchColumn();
 
 require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
 ?>
 
 <div class="app-container">
+    <?php require_once dirname(__DIR__, 2) . '/views/components/sidebar.php'; ?>
+    <main class="main-content">
+        <?php require_once dirname(__DIR__, 2) . '/views/components/navbar.php'; ?>
 
-<?php require_once dirname(__DIR__, 2) . '/views/components/sidebar.php'; ?>
+        <div style="margin-bottom: 1.5rem;">
+            <a href="certificates.php" style="color: var(--color-primary); font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+                ← Back to Event List
+            </a>
+        </div>
 
-<main class="main-content">
+        <h1><?= SecurityHelper::escape($event['title']) ?></h1>
 
-<?php require_once dirname(__DIR__, 2) . '/views/components/navbar.php'; ?>
+        <?php if (!empty($success)): ?>
+        <div class="success-box">
+            Certificates Generated Successfully ✅
+        </div>
+        <?php endif; ?>
 
-<h1>
-<?= SecurityHelper::escape($event['title']) ?>
-</h1>
+        <?php if (!empty($emailSuccess)): ?>
+        <div class="success-box">
+            Certificates Sent Successfully 📧
+        </div>
+        <?php endif; ?>
 
-<?php if (!empty($success)): ?>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= SecurityHelper::generateCsrfToken() ?>">
 
-<div class="success-box">
-    Certificates Generated Successfully ✅
-</div>
+            <input type="text" id="teamSearch" placeholder="Search Team Name..." style="width:100%; padding:12px; border-radius:10px; margin-bottom:20px; border:1px solid #ccc;">
 
-<?php endif; ?>
+            <div class="certificate-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Name</th>
+                            <th>Enrollment</th>
+                            <th>Certificate Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($teams as $teamName => $team): ?>
+                        <tr class="team-row">
+                            <td><?= SecurityHelper::escape($teamName) ?></td>
+                            <td>
+                                <?php foreach ($team['members'] as $member): ?>
+                                <div><?= SecurityHelper::escape($member['participant_name']) ?></div>
+                                <?php endforeach; ?>
+                            </td>
+                            <td>
+                                <?php foreach ($team['members'] as $member): ?>
+                                <div><?= SecurityHelper::escape($member['enrollment_no']) ?></div>
+                                <?php endforeach; ?>
+                            </td>
+                            <td>
+                                <select name="certificate_type[<?= md5($teamName) ?>]">
+                                    <option value="Participation">Participation</option>
+                                    <option value="Winner">Winner</option>
+                                    <option value="Runner-up">Runner-up</option>
+                                    <option value="Coordinator">Coordinator</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
 
-<?php if (!empty($emailSuccess)): ?>
+                <button type="submit" name="generate" class="generate-btn">
+                    Generate Certificates
+                </button>
 
-<div class="success-box">
-    Certificates Sent Successfully 📧
-</div>
-
-<?php endif; ?>
-
-<form method="POST">
-
-<input
-    type="hidden"
-    name="csrf_token"
-    value="<?= SecurityHelper::generateCsrfToken() ?>">
-
-<input
-    type="text"
-    id="teamSearch"
-    placeholder="Search Team Name..."
-    style="
-        width:100%;
-        padding:12px;
-        border-radius:10px;
-        margin-bottom:20px;
-        border:1px solid #ccc;
-    ">
-
-<div class="certificate-card">
-
-<table>
-
-<thead>
-
-<tr>
-    <th>Team</th>
-    <th>Name</th>
-    <th>Enrollment</th>
-    <th>Certificate Type</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-<?php foreach ($teams as $teamName => $team): ?>
-
-<tr class="team-row">
-
-<td>
-<?= SecurityHelper::escape($teamName) ?>
-</td>
-
-<td>
-
-<?php foreach ($team['members'] as $member): ?>
-
-<div>
-<?= SecurityHelper::escape(
-    $member['participant_name']
-) ?>
-</div>
-
-<?php endforeach; ?>
-
-</td>
-
-<td>
-
-<?php foreach ($team['members'] as $member): ?>
-
-<div>
-<?= SecurityHelper::escape(
-    $member['enrollment_no']
-) ?>
-</div>
-
-<?php endforeach; ?>
-
-</td>
-
-<td>
-
-<select
-name="certificate_type[<?= md5($teamName) ?>]">
-
-<option value="Participation">
-Participation
-</option>
-
-<option value="Winner">
-Winner
-</option>
-
-<option value="Runner-up">
-Runner-up
-</option>
-
-<option value="Coordinator">
-Coordinator
-</option>
-
-</select>
-
-</td>
-
-</tr>
-
-<?php endforeach; ?>
-
-</tbody>
-
-</table>
-
-<button
-    type="submit"
-    name="generate"
-    class="generate-btn">
-
-    Generate Certificates
-
-</button>
-
-<button
-    type="submit"
-    name="send_emails"
-    class="generate-btn">
-
-Send Certificates
-
-</button>
-
-</div>
-
-</form>
-
-</main>
-
+                <button type="submit" name="send_emails" class="generate-btn">
+                    Send Certificates
+                </button>
+            </div>
+        </form>
+    </main>
 </div>
 
 <style>
-
-.certificate-card{
+.certificate-card {
     background:var(--bg-surface);
     padding:20px;
     border-radius:20px;
     overflow:auto;
 }
-
-table{
+table {
     width:100%;
     border-collapse:collapse;
 }
-
-th,td{
+th, td {
     padding:12px;
     border-bottom:1px solid rgba(255,255,255,.08);
 }
-
-select{
+select {
     padding:8px;
     border-radius:8px;
 }
-
-.generate-btn{
+.generate-btn {
     margin-top:20px;
     padding:14px 24px;
     background:#2563eb;
@@ -586,44 +400,23 @@ select{
     color:white;
     cursor:pointer;
 }
-
-.success-box{
+.success-box {
     background:#22c55e;
     padding:15px;
     border-radius:12px;
     margin-bottom:20px;
     color:white;
 }
-
 </style>
 
 <script>
-
-document
-.getElementById('teamSearch')
-.addEventListener('keyup', function(){
-
-    let value =
-    this.value.toLowerCase();
-
-    document
-    .querySelectorAll('.team-row')
-    .forEach(function(row){
-
-        let text =
-        row.innerText.toLowerCase();
-
-        row.style.display =
-        text.includes(value)
-        ? ''
-        : 'none';
-
+document.getElementById('teamSearch').addEventListener('keyup', function(){
+    let value = this.value.toLowerCase();
+    document.querySelectorAll('.team-row').forEach(function(row){
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(value) ? '' : 'none';
     });
-
 });
-
 </script>
 
-<?php
-require_once dirname(__DIR__, 2) . '/views/layouts/footer.php';
-?>
+<?php require_once dirname(__DIR__, 2) . '/views/layouts/footer.php'; ?>
