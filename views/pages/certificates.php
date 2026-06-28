@@ -23,6 +23,82 @@ $db = Database::getConnection();
 
 $eventId = $_GET['event_id'] ?? 0;
 
+// ─── VIEW 1: EVENT SELECTION LIST (If no event_id is specified) ───
+if ($eventId == 0) {
+    $pageTitle = 'Manage Certificates';
+    
+    // Fetch all approved or completed events to display
+    $stmtEvents = $db->prepare("
+        SELECT * FROM events 
+        WHERE status IN ('Approved', 'Completed') 
+        ORDER BY start_time DESC
+    ");
+    $stmtEvents->execute();
+    $events = $stmtEvents->fetchAll();
+
+    require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
+    ?>
+    <div class="app-container">
+        <?php require_once dirname(__DIR__, 2) . '/views/components/sidebar.php'; ?>
+        <main class="main-content">
+            <?php require_once dirname(__DIR__, 2) . '/views/components/navbar.php'; ?>
+            
+            <div style="margin-bottom: 2rem;">
+                <h1 class="page-title">Manage Event Certificates</h1>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Select an active or completed event below to generate, view, and distribute certificates to participants.</p>
+            </div>
+
+            <div class="kavach-card" style="padding: 1.5rem; overflow-x: auto;">
+                <?php if (empty($events)): ?>
+                    <p style="color: var(--text-muted); text-align: center; padding: 2rem; font-size: 0.9rem;">No active or completed events found to generate certificates.</p>
+                <?php else: ?>
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--color-border);">
+                                <th style="padding: 12px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Event Name</th>
+                                <th style="padding: 12px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Location</th>
+                                <th style="padding: 12px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Date</th>
+                                <th style="padding: 12px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Status</th>
+                                <th style="padding: 12px; text-align: right; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($events as $ev): ?>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='none'">
+                                <td style="padding: 16px 12px; font-weight: 600; color: #fff;">
+                                    <?= SecurityHelper::escape($ev['title']) ?>
+                                </td>
+                                <td style="padding: 16px 12px; color: var(--text-muted); font-size: 0.9rem;">
+                                    <?= SecurityHelper::escape($ev['location']) ?>
+                                </td>
+                                <td style="padding: 16px 12px; color: var(--text-muted); font-size: 0.9rem;">
+                                    <?= date('M d, Y', strtotime($ev['start_time'])) ?>
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <span class="chip success" style="font-size: 0.75rem; padding: 0.2rem 0.6rem;">
+                                        <?= SecurityHelper::escape($ev['status']) ?>
+                                    </span>
+                                </td>
+                                <td style="padding: 16px 12px; text-align: right;">
+                                    <a href="?event_id=<?= $ev['id'] ?>" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem; border-radius: 6px;">
+                                        <i data-lucide="award" style="width: 14px; height: 14px;"></i>
+                                        Manage
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
+        </main>
+    </div>
+    <?php
+    require_once dirname(__DIR__, 2) . '/views/layouts/footer.php';
+    exit;
+}
+
+// ─── VIEW 2: CERTIFICATE GENERATION/EMAIL PANEL (When event_id is passed) ───
 $stmt = $db->prepare("
     SELECT *
     FROM events
@@ -30,7 +106,6 @@ $stmt = $db->prepare("
 ");
 
 $stmt->execute([$eventId]);
-
 $event = $stmt->fetch();
 
 if (!$event) {
@@ -379,6 +454,12 @@ require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
     <main class="main-content">
         <?php require_once dirname(__DIR__, 2) . '/views/components/navbar.php'; ?>
 
+        <div style="margin-bottom: 1.5rem;">
+            <a href="certificates.php" style="color: var(--color-primary); font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+                ← Back to Event List
+            </a>
+        </div>
+
         <h1><?= SecurityHelper::escape($event['title']) ?></h1>
 
         <?php if (!empty($success)): ?>
@@ -435,20 +516,53 @@ require_once dirname(__DIR__, 2) . '/views/layouts/header.php';
                     </tbody>
                 </table>
 
-                <button type="submit" name="generate" class="generate-btn">Generate Certificates</button>
-                <button type="submit" name="send_emails" class="generate-btn">Send Certificates</button>
+                <button type="submit" name="generate" class="generate-btn">
+                    Generate Certificates
+                </button>
+
+                <button type="submit" name="send_emails" class="generate-btn">
+                    Send Certificates
+                </button>
             </div>
         </form>
     </main>
 </div>
 
 <style>
-.certificate-card { background:var(--bg-surface); padding:20px; border-radius:20px; overflow:auto; }
-table { width:100%; border-collapse:collapse; }
-th, td { padding:12px; border-bottom:1px solid rgba(255,255,255,.08); }
-select { padding:8px; border-radius:8px; }
-.generate-btn { margin-top:20px; padding:14px 24px; background:#2563eb; border:none; border-radius:12px; color:white; cursor:pointer; }
-.success-box { background:#22c55e; padding:15px; border-radius:12px; margin-bottom:20px; color:white; }
+.certificate-card {
+    background:var(--bg-surface);
+    padding:20px;
+    border-radius:20px;
+    overflow:auto;
+}
+table {
+    width:100%;
+    border-collapse:collapse;
+}
+th, td {
+    padding:12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+select {
+    padding:8px;
+    border-radius:8px;
+}
+.generate-btn {
+    margin-top:20px;
+    padding:14px 24px;
+    background:#2563eb;
+    border:none;
+    border-radius:12px;
+    color:white;
+    cursor:pointer;
+}
+.success-box {
+    background:#22c55e;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:20px;
+    color:white;
+}
 </style>
 
 <script>
