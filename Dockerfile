@@ -23,6 +23,12 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
 
 RUN a2enmod rewrite
 
+# Enable Apache URL rewriting
+RUN a2enmod rewrite
+
+# Force Composer to use HTTP/1.1 instead of HTTP/2 to prevent GitHub download failures
+ENV COMPOSER_HTTP2=0
+
 RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 80
