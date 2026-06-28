@@ -15,7 +15,8 @@ class MailHelper
 
     $mail = new PHPMailer(true);
 
-    $mail->SMTPDebug = 0;
+    $mail->SMTPDebug = 2;
+$mail->Debugoutput = 'html';
 
     try {
 
